@@ -1,71 +1,36 @@
-## Customer Churn prediction
+# Customer Churn Prediction
 
-# 🎯 Project Overview
+This repository contains one Jupyter notebook, `Customer Churn prediction.ipynb`, that explores the Telco Customer Churn CSV and compares several classification approaches. The dataset is **not included** in this repository, so the notebook cannot run end to end until you obtain the data separately.
 
-- With the rapid advancement in data science and artificial intelligence, understanding customer behavior has become crucial for businesses to tailor their services effectively. This project leverages machine learning and deep learning techniques to analyze customer data and classify them based on various features such as service subscriptions, preferred payment methods, and demographic attributes. The insights gained from this analysis help businesses make informed decisions on marketing strategies and customer targeting.
+## Requirements
 
-# 🛠️ Models Used
+Use Python 3.11 and install the pinned dependencies in an isolated environment:
 
-To gain a comprehensive understanding of customer behavior, several machine learning and deep learning models were implemented, including:
+```bash
+python3.11 -m venv .venv
+# Linux/macOS
+source .venv/bin/activate
+# Windows PowerShell: .venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
 
-- **Logistic Regression**: Used for binary classification tasks to predict whether a customer follows a specific behavior or not.
-- **Decision Tree & Random Forest**: Effective in understanding how decisions are made based on different customer attributes, providing clear interpretability.
-- **Support Vector Machine (SVM)**: Applied for complex classifications, ensuring high accuracy in distinguishing data points.
-- **Deep Learning Models**:
-  - **Artificial Neural Networks (ANNs)**: Used to process large datasets and extract deep patterns.
-  - **Long Short-Term Memory (LSTM)**: Helps in analyzing sequential data and predicting future trends based on past information.
-  - **Gated Recurrent Unit (GRU)**: A simplified alternative to LSTM for processing time-series data.
+Start Jupyter with `jupyter lab` and open the notebook.
 
-# 🧰 Model Training
+## Dataset
 
-- All models were trained using customer data, where hyperparameters were optimized to achieve the best possible performance. The dataset was split into training and testing sets to ensure fair evaluation.
+Obtain the Telco Customer Churn CSV from its source under the applicable license/terms. The expected filename is `WA_Fn-UseC_-Telco-Customer-Churn.csv`; place it at `data/WA_Fn-UseC_-Telco-Customer-Churn.csv`, or set `CHURN_DATA_PATH` to the CSV's location before starting Jupyter. The notebook raises an actionable `FileNotFoundError` if the file cannot be found. Do not commit private or licensed data to this repository.
 
-# 📊 Model Evaluation
+The CSV is expected to contain the columns used by the notebook, including `Churn`, `customerID`, `tenure`, `MonthlyCharges`, and the Telco service/payment fields. No Kaggle API credential is needed or should be added to the notebook.
 
-To assess the performance of each model, key evaluation metrics were used:
+## Running the notebook
 
-- **Accuracy**: Measures how well the model predicts correct outcomes.
-- **Confusion Matrix**: Analyzes misclassifications and helps refine the model.
-- **Loss Function**: Evaluates the error rate over training epochs, with lower loss indicating better performance.
+Run cells from top to bottom. The notebook contains exploratory plots, feature engineering, train/test comparison of traditional classifiers, and experimental ANN/LSTM/GRU sections. Scaling is fitted using training rows, SMOTE is now applied only to the training partition for the basic comparisons, and prior saved outputs have been removed so they are not mistaken for fresh results.
 
-- The evaluation results were visualized through charts and graphs to show how accuracy and loss evolved over time, offering clear insights into each model's effectiveness.
+## Limitations
 
-# 🔍 Model Comparison
-
-After evaluating all models, their performance was analyzed to determine the best model based on accuracy, error rate, and overall predictive power. The findings revealed that:
-
-- **Random Forest outperformed other models in terms of accuracy and classification efficiency.**
-
-- This suggests that Random Forest is an ideal choice for this type of analysis, particularly when high interpretability and accuracy are required.
-
-# 📈 Visualizations and Results
-
-- Graphs were used to illustrate the performance of different models over time.
-- The impact of increasing training epochs on accuracy and loss was analyzed.
-- Trends in classification errors and accuracy were visualized to help select the best model.
-
-# 🔗 References
-  - Dataset description and structure as per the project documentation.
-
-# 📁 Repository Structure
-
-├── data                       
-
-├── notebooks   
-
-└── README.md
-
-# ✅ Conclusion and Recommendations
-
-This project demonstrates the power of AI-driven customer behavior analysis, providing businesses with valuable insights to refine their marketing strategies, personalize promotions, and enhance customer experiences.
-
-🔹 **Key Recommendation:** Since Random Forest delivered the best performance, it can be utilized in real-world applications for accurate customer classification and behavioral analysis.
-
-📌 Future enhancements could include incorporating more granular customer interaction data or experimenting with more advanced deep learning architectures to achieve even higher precision. 🚀
-
-# 💻 Contact
-   - Abdul Rahman Ahmed 
-   - abdulrahmannassar202@gmail.com
-
-# 📌 Project link:
-   - [https://github.com/Abdulrahman181/Customer-Churn-prediction]
+- No dataset is checked in, and the notebook has **not been executed or model performance validated** as part of this maintenance change.
+- The feature list is manually specified, and some exploratory feature-selection/model-fitting cells run before the final holdout split. Treat reported metrics as exploratory; for publication or deployment, move all feature selection inside a cross-validation pipeline and evaluate on a genuinely untouched holdout.
+- The LSTM/GRU sections reshape each customer's tabular row to a sequence with one timestep. They are included as experiments, but do not model longitudinal customer histories.
+- Hyperparameter search uses an imbalanced-learn pipeline so scaling and oversampling occur within each CV training fold. The notebook still requires review and execution with the intended dataset before its findings can be relied on.
+- This is an educational analysis, not a production churn system. Validate data quality, fairness, privacy, and deployment requirements independently.

@@ -1,0 +1,9 @@
+# Local datasets are not distributed with this repository.
+data/
+*.csv
+
+# Python/Jupyter local state.
+.venv/
+venv/
+__pycache__/
+.ipynb_checkpoints/
