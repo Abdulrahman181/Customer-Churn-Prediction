@@ -1,10 +1,16 @@
 # Customer Churn Prediction
 
-This repository contains one Jupyter notebook, `Customer Churn prediction.ipynb`, that explores the Telco Customer Churn CSV and compares several classification approaches. The dataset is **not included** in this repository, so the notebook cannot run end to end until you obtain the data separately.
+This repository contains an exploratory Jupyter notebook and a separate, reproducible Python training workflow for the Telco Customer Churn example. The CSV is **not included**. No performance metrics or external validation are claimed by this repository.
 
-## Requirements
+## Dataset and privacy
 
-Use Python 3.11 and install the pinned dependencies in an isolated environment:
+Obtain the Telco Customer Churn CSV separately from a source whose terms permit your use. The expected filename is `WA_Fn-UseC_-Telco-Customer-Churn.csv`; place it under `data/` in the repository, or set `CHURN_DATA_PATH` to the local CSV path. Do not commit private, licensed, or otherwise restricted data. Local datasets, model artifacts, and generated CSVs are ignored by Git.
+
+The training workflow requires a binary `Churn` column with `Yes`/`No` or `1`/`0` labels. It excludes common customer ID fields and known duplicate/derived churn columns from predictors, converts numeric-looking text such as whitespace-containing `TotalCharges`, and imputes missing feature values using training-fold statistics. It validates the target and reports actionable errors for missing files, malformed headers, missing labels, and invalid classes.
+
+## Install
+
+Use Python 3.11 in an isolated environment. The pinned full requirements include dependencies used by the notebook (including TensorFlow); the new training package has a smaller pinned dependency set and does not require TensorFlow.
 
 ```bash
 python3.11 -m venv .venv
@@ -12,25 +18,36 @@ python3.11 -m venv .venv
 source .venv/bin/activate
 # Windows PowerShell: .venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
+# Package workflow and tests
+python -m pip install -e ".[test]"
+# Install this as well only when using the full exploratory notebook
 python -m pip install -r requirements.txt
 ```
 
-Start Jupyter with `jupyter lab` and open the notebook.
+## Reproducible training workflow
 
-## Dataset
+Run from the repository root. `--data` overrides the default path; otherwise `CHURN_DATA_PATH` is used when set, and `data/WA_Fn-UseC_-Telco-Customer-Churn.csv` is the default.
 
-Obtain the Telco Customer Churn CSV from its source under the applicable license/terms. The expected filename is `WA_Fn-UseC_-Telco-Customer-Churn.csv`; place it at `data/WA_Fn-UseC_-Telco-Customer-Churn.csv`, or set `CHURN_DATA_PATH` to the CSV's location before starting Jupyter. The notebook raises an actionable `FileNotFoundError` if the file cannot be found. Do not commit private or licensed data to this repository.
+```bash
+churn-train --data data/WA_Fn-UseC_-Telco-Customer-Churn.csv --output-dir artifacts
+# Or set CHURN_DATA_PATH=/path/to/file.csv and run: churn-train
+```
 
-The CSV is expected to contain the columns used by the notebook, including `Churn`, `customerID`, `tenure`, `MonthlyCharges`, and the Telco service/payment fields. No Kaggle API credential is needed or should be added to the notebook.
+This workflow creates a deterministic stratified 60/20/20 train/validation/test split. Imputation, scaling, and categorical encoding are fitted only on training rows in an sklearn pipeline. A class-balanced logistic-regression baseline is fitted on training rows; its decision threshold is selected on validation data; test metrics are computed only after those choices are fixed. The held-out test data are not used for training or threshold tuning. This implementation does not oversample the data.
 
-## Running the notebook
+The ignored `artifacts/` directory contains a fitted `model.joblib`, a feature/target `schema.json`, and aggregate `metrics.json`. It does not save customer-level predictions or input records. The report includes aggregate accuracy, precision, recall, F1, ROC-AUC, a confusion matrix, and the validation-selected threshold; these are outputs of your local run, **not precomputed or independently validated repository results**. Joblib files use Python pickle internally: load only artifacts from sources you trust, and protect them like other model files.
 
-Run cells from top to bottom. The notebook contains exploratory plots, feature engineering, train/test comparison of traditional classifiers, and experimental ANN/LSTM/GRU sections. Scaling is fitted using training rows, SMOTE is now applied only to the training partition for the basic comparisons, and prior saved outputs have been removed so they are not mistaken for fresh results.
+## Exploratory notebook
 
-## Limitations
+Open `Customer Churn prediction.ipynb` in Jupyter. Install `requirements.txt` first. Notebook outputs are cleared from version control to avoid retaining customer-level samples or implying fresh results. The notebook is exploratory and not an alternative to the cleaner package workflow above: its hand-selected features and some feature-selection/model-fitting/EDA cells are fit or examined before its holdout split, so its reported comparisons can be optimistic. Neural-network fitting now uses a validation split from training data instead of using the test partition as validation, but the notebook as a whole still has pre-split leakage. The LSTM/GRU sections reshape each tabular row to one timestep and do not model longitudinal histories.
 
-- No dataset is checked in, and the notebook has **not been executed or model performance validated** as part of this maintenance change.
-- The feature list is manually specified, and some exploratory feature-selection/model-fitting cells run before the final holdout split. Treat reported metrics as exploratory; for publication or deployment, move all feature selection inside a cross-validation pipeline and evaluate on a genuinely untouched holdout.
-- The LSTM/GRU sections reshape each customer's tabular row to a sequence with one timestep. They are included as experiments, but do not model longitudinal customer histories.
-- Hyperparameter search uses an imbalanced-learn pipeline so scaling and oversampling occur within each CV training fold. The notebook still requires review and execution with the intended dataset before its findings can be relied on.
-- This is an educational analysis, not a production churn system. Validate data quality, fairness, privacy, and deployment requirements independently.
+## Tests and limitations
+
+Run automated checks with:
+
+```bash
+python -m pytest
+python -m compileall -q src tests
+```
+
+Tests use generated in-memory fixtures only; they do not represent the real dataset or model performance. This is an educational example, not a production churn system. It has not been externally validated and should not be used to make high-impact customer decisions without independent review of data quality, privacy, fairness, security, and deployment requirements.
