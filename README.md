@@ -1,71 +1,53 @@
-## Customer Churn prediction
+# Customer Churn Prediction
 
-# 🎯 Project Overview
+This repository contains an exploratory Jupyter notebook and a separate, reproducible Python training workflow for the Telco Customer Churn example. The CSV is **not included**. No performance metrics or external validation are claimed by this repository.
 
-- With the rapid advancement in data science and artificial intelligence, understanding customer behavior has become crucial for businesses to tailor their services effectively. This project leverages machine learning and deep learning techniques to analyze customer data and classify them based on various features such as service subscriptions, preferred payment methods, and demographic attributes. The insights gained from this analysis help businesses make informed decisions on marketing strategies and customer targeting.
+## Dataset and privacy
 
-# 🛠️ Models Used
+Obtain the Telco Customer Churn CSV separately from a source whose terms permit your use. The expected filename is `WA_Fn-UseC_-Telco-Customer-Churn.csv`; place it under `data/` in the repository, or set `CHURN_DATA_PATH` to the local CSV path. Do not commit private, licensed, or otherwise restricted data. Local datasets, model artifacts, and generated CSVs are ignored by Git.
 
-To gain a comprehensive understanding of customer behavior, several machine learning and deep learning models were implemented, including:
+The training workflow requires a binary `Churn` column with `Yes`/`No` or `1`/`0` labels. It excludes common customer ID fields and known duplicate/derived churn columns from predictors, converts numeric-looking text such as whitespace-containing `TotalCharges`, and imputes missing feature values using training-fold statistics. It validates the target and reports actionable errors for missing files, malformed headers, missing labels, and invalid classes.
 
-- **Logistic Regression**: Used for binary classification tasks to predict whether a customer follows a specific behavior or not.
-- **Decision Tree & Random Forest**: Effective in understanding how decisions are made based on different customer attributes, providing clear interpretability.
-- **Support Vector Machine (SVM)**: Applied for complex classifications, ensuring high accuracy in distinguishing data points.
-- **Deep Learning Models**:
-  - **Artificial Neural Networks (ANNs)**: Used to process large datasets and extract deep patterns.
-  - **Long Short-Term Memory (LSTM)**: Helps in analyzing sequential data and predicting future trends based on past information.
-  - **Gated Recurrent Unit (GRU)**: A simplified alternative to LSTM for processing time-series data.
+## Install
 
-# 🧰 Model Training
+Use Python 3.11 in an isolated environment. The pinned full requirements include dependencies used by the notebook (including TensorFlow); the new training package has a smaller pinned dependency set and does not require TensorFlow.
 
-- All models were trained using customer data, where hyperparameters were optimized to achieve the best possible performance. The dataset was split into training and testing sets to ensure fair evaluation.
+```bash
+python3.11 -m venv .venv
+# Linux/macOS
+source .venv/bin/activate
+# Windows PowerShell: .venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+# Package workflow and tests
+python -m pip install -e ".[test]"
+# Install this as well only when using the full exploratory notebook
+python -m pip install -r requirements.txt
+```
 
-# 📊 Model Evaluation
+## Reproducible training workflow
 
-To assess the performance of each model, key evaluation metrics were used:
+Run from the repository root. `--data` overrides the default path; otherwise `CHURN_DATA_PATH` is used when set, and `data/WA_Fn-UseC_-Telco-Customer-Churn.csv` is the default.
 
-- **Accuracy**: Measures how well the model predicts correct outcomes.
-- **Confusion Matrix**: Analyzes misclassifications and helps refine the model.
-- **Loss Function**: Evaluates the error rate over training epochs, with lower loss indicating better performance.
+```bash
+churn-train --data data/WA_Fn-UseC_-Telco-Customer-Churn.csv --output-dir artifacts
+# Or set CHURN_DATA_PATH=/path/to/file.csv and run: churn-train
+```
 
-- The evaluation results were visualized through charts and graphs to show how accuracy and loss evolved over time, offering clear insights into each model's effectiveness.
+This workflow creates a deterministic stratified 60/20/20 train/validation/test split. Imputation, scaling, and categorical encoding are fitted only on training rows in an sklearn pipeline. A class-balanced logistic-regression baseline is fitted on training rows; its decision threshold is selected on validation data; test metrics are computed only after those choices are fixed. The held-out test data are not used for training or threshold tuning. This implementation does not oversample the data.
 
-# 🔍 Model Comparison
+The ignored `artifacts/` directory contains a fitted `model.joblib`, a feature/target `schema.json`, and aggregate `metrics.json`. It does not save customer-level predictions or input records. The report includes aggregate accuracy, precision, recall, F1, ROC-AUC, a confusion matrix, and the validation-selected threshold; these are outputs of your local run, **not precomputed or independently validated repository results**. Joblib files use Python pickle internally: load only artifacts from sources you trust, and protect them like other model files.
 
-After evaluating all models, their performance was analyzed to determine the best model based on accuracy, error rate, and overall predictive power. The findings revealed that:
+## Exploratory notebook
 
-- **Random Forest outperformed other models in terms of accuracy and classification efficiency.**
+Open `Customer Churn prediction.ipynb` in Jupyter. Install `requirements.txt` first. Notebook outputs are cleared from version control to avoid retaining customer-level samples or implying fresh results. The notebook is exploratory and not an alternative to the cleaner package workflow above: its hand-selected features and some feature-selection/model-fitting/EDA cells are fit or examined before its holdout split, so its reported comparisons can be optimistic. Neural-network fitting now uses a validation split from training data instead of using the test partition as validation, but the notebook as a whole still has pre-split leakage. The LSTM/GRU sections reshape each tabular row to one timestep and do not model longitudinal histories.
 
-- This suggests that Random Forest is an ideal choice for this type of analysis, particularly when high interpretability and accuracy are required.
+## Tests and limitations
 
-# 📈 Visualizations and Results
+Run automated checks with:
 
-- Graphs were used to illustrate the performance of different models over time.
-- The impact of increasing training epochs on accuracy and loss was analyzed.
-- Trends in classification errors and accuracy were visualized to help select the best model.
+```bash
+python -m pytest
+python -m compileall -q src tests
+```
 
-# 🔗 References
-  - Dataset description and structure as per the project documentation.
-
-# 📁 Repository Structure
-
-├── data                       
-
-├── notebooks   
-
-└── README.md
-
-# ✅ Conclusion and Recommendations
-
-This project demonstrates the power of AI-driven customer behavior analysis, providing businesses with valuable insights to refine their marketing strategies, personalize promotions, and enhance customer experiences.
-
-🔹 **Key Recommendation:** Since Random Forest delivered the best performance, it can be utilized in real-world applications for accurate customer classification and behavioral analysis.
-
-📌 Future enhancements could include incorporating more granular customer interaction data or experimenting with more advanced deep learning architectures to achieve even higher precision. 🚀
-
-# 💻 Contact
-   - Abdul Rahman Ahmed 
-   - abdulrahmannassar202@gmail.com
-
-# 📌 Project link:
-   - [https://github.com/Abdulrahman181/Customer-Churn-prediction]
+Tests use generated in-memory fixtures only; they do not represent the real dataset or model performance. This is an educational example, not a production churn system. It has not been externally validated and should not be used to make high-impact customer decisions without independent review of data quality, privacy, fairness, security, and deployment requirements.

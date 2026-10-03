@@ -1,0 +1,17 @@
+# Local datasets are not distributed with this repository.
+data/
+*.csv
+
+# Locally generated models, metrics, schemas, and temporary output.
+artifacts/
+*.joblib
+
+# Python/Jupyter local state and build products.
+.venv/
+venv/
+__pycache__/
+.ipynb_checkpoints/
+.pytest_cache/
+*.egg-info/
+build/
+dist/
