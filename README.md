@@ -1,71 +1,50 @@
-## Customer Churn prediction
+# Customer Churn Prediction
 
-# 🎯 Project Overview
+A reproducible scikit-learn baseline for the Telco Customer Churn classification dataset.
 
-- With the rapid advancement in data science and artificial intelligence, understanding customer behavior has become crucial for businesses to tailor their services effectively. This project leverages machine learning and deep learning techniques to analyze customer data and classify them based on various features such as service subscriptions, preferred payment methods, and demographic attributes. The insights gained from this analysis help businesses make informed decisions on marketing strategies and customer targeting.
+## Scope
 
-# 🛠️ Models Used
+The notebook compares **logistic regression**, **random forest**, and **support-vector machine** pipelines. Preprocessing is leakage-safe: the train/test split happens before imputation, scaling, one-hot encoding, or model fitting, and every transformer is fitted only on the training partition.
 
-To gain a comprehensive understanding of customer behavior, several machine learning and deep learning models were implemented, including:
+This repository does **not** include the source CSV. No accuracy or model-ranking claim is made here until the notebook is run against a real copy of the data.
 
-- **Logistic Regression**: Used for binary classification tasks to predict whether a customer follows a specific behavior or not.
-- **Decision Tree & Random Forest**: Effective in understanding how decisions are made based on different customer attributes, providing clear interpretability.
-- **Support Vector Machine (SVM)**: Applied for complex classifications, ensuring high accuracy in distinguishing data points.
-- **Deep Learning Models**:
-  - **Artificial Neural Networks (ANNs)**: Used to process large datasets and extract deep patterns.
-  - **Long Short-Term Memory (LSTM)**: Helps in analyzing sequential data and predicting future trends based on past information.
-  - **Gated Recurrent Unit (GRU)**: A simplified alternative to LSTM for processing time-series data.
+## Data setup
 
-# 🧰 Model Training
+The expected schema includes `Churn`, `tenure`, `MonthlyCharges`, and `TotalCharges` (the commonly used Telco Customer Churn CSV also includes `customerID`). Put the file at:
 
-- All models were trained using customer data, where hyperparameters were optimized to achieve the best possible performance. The dataset was split into training and testing sets to ensure fair evaluation.
+```text
+data/WA_Fn-UseC_-Telco-Customer-Churn.csv
+```
 
-# 📊 Model Evaluation
+or point to another location:
 
-To assess the performance of each model, key evaluation metrics were used:
+```bash
+export CUSTOMER_CHURN_DATA=/absolute/path/to/WA_Fn-UseC_-Telco-Customer-Churn.csv
+```
 
-- **Accuracy**: Measures how well the model predicts correct outcomes.
-- **Confusion Matrix**: Analyzes misclassifications and helps refine the model.
-- **Loss Function**: Evaluates the error rate over training epochs, with lower loss indicating better performance.
+If the file is missing, the notebook raises a clear `FileNotFoundError` with these instructions. `TotalCharges` is parsed numerically, and unknown/missing feature values are handled inside the pipeline.
 
-- The evaluation results were visualized through charts and graphs to show how accuracy and loss evolved over time, offering clear insights into each model's effectiveness.
+## Install and run
 
-# 🔍 Model Comparison
+```bash
+python -m venv .venv
+. .venv/bin/activate
+python -m pip install -r requirements.txt
+python validate_project.py
+jupyter lab "Customer Churn prediction.ipynb"
+```
 
-After evaluating all models, their performance was analyzed to determine the best model based on accuracy, error rate, and overall predictive power. The findings revealed that:
+The static validator checks notebook JSON, AST syntax, stale outputs, notebook-only magics, portable data configuration, and the presence of a stratified split and pipeline. It does not train models.
 
-- **Random Forest outperformed other models in terms of accuracy and classification efficiency.**
+## Evaluation notes
 
-- This suggests that Random Forest is an ideal choice for this type of analysis, particularly when high interpretability and accuracy are required.
+The notebook uses a fixed `RANDOM_STATE = 42` and a stratified 80/20 holdout. It reports accuracy, balanced accuracy, precision, recall, F1, ROC-AUC, a confusion matrix, and a classification report. The test set is reserved for final comparison; future tuning should use cross-validation on the training partition and keep the holdout untouched.
 
-# 📈 Visualizations and Results
+The former notebook applied SMOTE, scaling, feature selection, and derived features before the split, which could leak information from the eventual test set. Those steps were removed in favor of a single `ColumnTransformer`/`Pipeline` workflow. Deep-learning cells were also removed: they were not reproducible without a heavy optional dependency and incorrectly passed the test set as validation data.
 
-- Graphs were used to illustrate the performance of different models over time.
-- The impact of increasing training epochs on accuracy and loss was analyzed.
-- Trends in classification errors and accuracy were visualized to help select the best model.
+## Repository files
 
-# 🔗 References
-  - Dataset description and structure as per the project documentation.
-
-# 📁 Repository Structure
-
-├── data                       
-
-├── notebooks   
-
-└── README.md
-
-# ✅ Conclusion and Recommendations
-
-This project demonstrates the power of AI-driven customer behavior analysis, providing businesses with valuable insights to refine their marketing strategies, personalize promotions, and enhance customer experiences.
-
-🔹 **Key Recommendation:** Since Random Forest delivered the best performance, it can be utilized in real-world applications for accurate customer classification and behavioral analysis.
-
-📌 Future enhancements could include incorporating more granular customer interaction data or experimenting with more advanced deep learning architectures to achieve even higher precision. 🚀
-
-# 💻 Contact
-   - Abdul Rahman Ahmed 
-   - abdulrahmannassar202@gmail.com
-
-# 📌 Project link:
-   - [https://github.com/Abdulrahman181/Customer-Churn-prediction]
+- `Customer Churn prediction.ipynb` — cleaned, output-free analysis notebook.
+- `validate_project.py` — dependency-free static validation.
+- `requirements.txt` — runtime and notebook dependencies.
+- `ENGINEERING_REVIEW.md` — audit findings, changes, and validation evidence.
