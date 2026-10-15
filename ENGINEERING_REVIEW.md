@@ -67,3 +67,37 @@ The full notebook was intentionally not executed. Running it requires installing
 - Add training-set cross-validation for model selection and confidence intervals or repeated splits before making a production claim.
 - Confirm the exact dataset schema and label distribution; the notebook intentionally fails fast on unsupported `Churn` labels.
 - Consider a calibration/threshold policy and business-cost metric before deployment; accuracy alone is insufficient for churn intervention decisions.
+
+## Second Senior Review
+
+**Review date:** 2026-10-15
+**Scope:** every tracked file, the complete notebook, repository history/diff, configuration, and newly added regression tests.
+
+### Findings
+
+1. **Test-set model-selection leakage remained.** The first repair evaluated all models on the holdout and then selected the model with the highest holdout ROC-AUC. That makes the reported holdout comparison optimistic when the selected model is treated as the final choice.
+2. **Pipeline transformer state was shared across models.** `make_model` reused one `ColumnTransformer` instance in three pipelines. The current data happened to use identical training rows, but shared fitted state is an unsafe object contract and can silently contaminate future model-specific changes or fitting order.
+3. **The notebook lacked defensive data validation.** Empty files, duplicate headers, unusable/all-missing required numeric columns, infinite numeric values, one-class targets, and too-small classes produced obscure downstream errors or invalid evaluation plans.
+4. **Static validation did not check clean execution state or all IPython commands.** It checked outputs and a narrow subset of magics, but not non-null execution counts, `get_ipython`, shell/magic variants, or training-only model-selection markers. There were also no regression tests for the validator.
+
+### Fixes completed
+
+- Added up-to-five-fold shuffled `StratifiedKFold`/`cross_validate` on `X_train`; model selection now uses training-only mean ROC-AUC, followed by one held-out evaluation.
+- Changed preprocessing construction to a factory so every model owns a fresh `ColumnTransformer` and fitted transformer state.
+- Added explicit CSV-empty, empty-dataframe, duplicate-column, numeric coercion/finite-value, target-label/class-count, feature-count, and cross-validation-size checks. The notebook now fails fast with actionable messages rather than claiming metrics for invalid inputs.
+- Expanded `validate_project.py` with reusable `validate_notebook`, malformed-cell checks, stale execution-count checks, broad IPython magic/shell detection, and cross-validation markers.
+- Added `tests/test_validate_project.py` regression tests; documented the revised evaluation contract and test command; declared pytest in `requirements.txt`.
+- Confirmed the notebook remains output-free and does not contain secrets, serialized-artifact loading, API/UI code, or machine-specific paths. No artifact loader or API/UI file was missing because the repository documents and implements a notebook-only baseline.
+
+### Second-review validation
+
+- `python3 validate_project.py` passed: 5 code cells, valid AST, clean execution state, and portable data configuration.
+- `ruff check validate_project.py tests/test_validate_project.py`, `python3 -m compileall -q validate_project.py tests`, `pytest -q` (2 passed), and `git diff --check` passed.
+- Every notebook code cell was executed in order against a temporary schema-valid synthetic CSV; the runtime smoke test passed. The temporary file and its metrics were not committed.
+- The source CSV is still absent from the repository, so a real-data end-to-end training run and genuine performance metrics remain intentionally unclaimed.
+
+### Remaining risks
+
+- Run the notebook in a clean environment with the licensed/source CSV and verify the exact schema and label distribution.
+- Cross-validation and the holdout remain a baseline evaluation, not production validation; add repeated CV/confidence intervals, calibration, threshold policy, and business-cost evaluation before deployment.
+- Dependency ranges are minimum-version ranges rather than a lockfile; capture a tested lock/constraints file if byte-for-byte environment reproducibility is required.

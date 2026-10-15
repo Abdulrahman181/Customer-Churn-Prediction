@@ -3,3 +3,4 @@ pandas>=2.0
 scikit-learn>=1.2
 jupyterlab>=4.0
 nbformat>=5.9
+pytest>=8.0
